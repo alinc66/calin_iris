@@ -1,36 +1,39 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from prediction import predict
+import joblib
+from PIL import Image
+
+#Loading Our final trained Knn model 
+model= open("Knn_Classifier.pkl", "rb")
+knn_clf=joblib.load(model)
 
 
-st.title('Classifying Iris Flowers')
-st.markdown('Toy model to play to classify iris flowers into \
-     (setosa, versicolor, virginica) based on their sepal/petal \
-    and length/width.')
+st.title("Iris flower species Classification App")
 
-st.header("Plant Features")
-col1, col2 = st.columns(2)
+#Loading images
 
-with col1:
-    st.text("Sepal characteristics")
-    sepal_l = st.slider('Sepal lenght (cm)', 1.0, 8.0, 0.5)
-    sepal_w = st.slider('Sepal width (cm)', 2.0, 4.4, 0.5)
+setosa= Image.open('setosa.png')
+versicolor= Image.open('versicolor.png')
+virginica = Image.open('virginica.png')
 
-with col2:
-    st.text("Pepal characteristics")
-    petal_l = st.slider('Petal lenght (cm)', 1.0, 7.0, 0.5)
-    petal_w = st.slider('Petal width (cm)', 0.1, 2.5, 0.5)
+st.sidebar.title("Features")
 
-st.text('')
-if st.button("Predict type of Iris"):
-    result = predict(
-        np.array([[sepal_l, sepal_w, petal_l, petal_w]]))
-    st.text(result[0])
+#Intializing
+parameter_list=['Sepal length (cm)','Sepal Width (cm)','Petal length (cm)','Petal Width (cm)']
+parameter_input_values=[]
+parameter_default_values=['5.2','3.2','4.2','1.2']
 
+values=[]
 
-st.text('')
-st.text('')
-st.markdown(
-    '`Create by` [santiviquez](https://twitter.com/santiviquez) | \
-         `Code:` [GitHub](https://github.com/santiviquez/iris-streamlit)')
+#Display
+for parameter, parameter_df in zip(parameter_list, parameter_default_values):
+	
+	values= st.sidebar.slider(label=parameter, key=parameter,value=float(parameter_df), min_value=0.0, max_value=8.0, step=0.1)
+	parameter_input_values.append(values)
+	
+input_variables=pd.DataFrame([parameter_input_values],columns=parameter_list,dtype=float)
+st.write('\n\n')
+
+if st.button("Click Here to Classify"):
+	prediction = knn_clf.predict(input_variables)
+	st.image(setosa) if prediction == 0 else st.image(versicolor)  if prediction == 1 else st.image(virginica) 
